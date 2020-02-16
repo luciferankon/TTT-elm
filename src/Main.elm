@@ -87,18 +87,29 @@ includes : List Int -> Int -> Bool
 includes moves pos =
   List.member pos moves
 
+symbolToString : Symbol -> String
+symbolToString sym = 
+  case sym of 
+    X -> "X"
+    O -> "O"
+    _ -> " "
+
 -- VIEW
 cell : Bool -> Int -> Symbol -> Html Move
 cell won position symbol =
-    button (if symbol == Empty && won == False
-            then [onClick (Position position)] 
-            else []) [ text (Debug.toString symbol) ]
+    button 
+    (if symbol == Empty && won == False
+            then [style "font-size" "30px",onClick (Position position)]
+            else [style "font-size" "30px"])  [text (symbolToString symbol)]
 
 view : Model -> Html Move
 view model =
   div []
     [div [style "display" "grid"
         ,style "grid-template-columns" "auto auto auto"
-        ,style "width" "150px"] 
+        ,style "width" "40%"
+        ,style "height" "500px"
+        ,style "margin-left" "30%"] 
         (indexedMap (cell model.status.hasWon) model.board)
-      ,div [] (if model.status.hasWon then [text (Debug.toString model.status.winner ++ " has won!")] else [])]
+      ,div [ style "margin" "2% 30%"
+            ,style "font-size" "30px"] (if model.status.hasWon then [text (Debug.toString model.status.winner ++ " has won!")] else [])]
