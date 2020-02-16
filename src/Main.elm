@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (Html, button, div, text)
+import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import List exposing (..)
 
@@ -22,8 +23,6 @@ winningCombinations = [[1,2,3],
                        [1,5,9],
                        [3,5,7]]
 
-type Msg
-  = PlaceSymbol Int 
 type GameStatus = Inplay | Over
 
 type Symbol = X | O | Empty
@@ -32,7 +31,8 @@ type Move = Position Int
 
 type alias Status = 
   { gameStatus:GameStatus,
-    winner: Symbol}
+    winner: Symbol,
+    hasWon: Bool}
 
 type alias Model = 
   { board : List Symbol,
@@ -48,7 +48,8 @@ init =
     otherPlayer = [],
     currentSymbol = X,
     status = { gameStatus = Inplay,
-               winner = Empty} }
+               winner = Empty,
+               hasWon = False} }
 
 -- UPDATE
 
@@ -62,13 +63,13 @@ update (Position pos) model =
 
 hasWon : List Int -> Bool 
 hasWon moves = 
-  List.any (\combination -> (List.all (includes moves) combination)) winningCombinations
+  List.any (\combination -> List.all (includes moves) combination) winningCombinations
 
 updateStatus : List Int -> Symbol -> Status
 updateStatus moves symbol =
-  if (hasWon moves)
-  then {gameStatus = Over, winner = symbol}
-  else {gameStatus = Inplay, winner = Empty}
+  if hasWon moves
+  then {gameStatus = Over, winner = symbol, hasWon = True}
+  else {gameStatus = Inplay, winner = Empty, hasWon = False}
 
 updateCurrentSymbol : Symbol -> Symbol
 updateCurrentSymbol sym =
@@ -87,19 +88,17 @@ includes moves pos =
   List.member pos moves
 
 -- VIEW
+cell : Bool -> Int -> Symbol -> Html Move
+cell won position symbol =
+    button (if symbol == Empty && won == False
+            then [onClick (Position position)] 
+            else []) [ text (Debug.toString symbol) ]
 
 view : Model -> Html Move
 view model =
   div []
-    [ button [ onClick (Position 0)] [ text "click Me!" ]
-    ,button [ onClick  (Position 1)] [ text "click Me!" ]
-    ,button [ onClick (Position 2)] [ text "click Me!" ]
-    ,button [ onClick (Position 3)] [ text "click Me!" ]
-    ,button [ onClick (Position 4)] [ text "click Me!" ]
-    ,button [ onClick (Position 5)] [ text "click Me!" ]
-    ,button [ onClick (Position 6)] [ text "click Me!" ]
-    ,button [ onClick (Position 7)] [ text "click Me!" ]
-    ,button [ onClick (Position 8)] [ text "click Me!" ]
-    ,div [] [text (Debug.toString (model.status))]
-    ,div [] [text (Debug.toString (model.currentPlayer))]
-    ,div [] [text (Debug.toString (model.otherPlayer))]]
+    [div [style "display" "grid"
+        ,style "grid-template-columns" "auto auto auto"
+        ,style "width" "150px"] 
+        (indexedMap (cell model.status.hasWon) model.board)
+      ,div [] (if model.status.hasWon then [text (Debug.toString model.status.winner ++ " has won!")] else [])]
